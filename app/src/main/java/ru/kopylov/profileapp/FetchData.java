@@ -1,6 +1,7 @@
 package ru.kopylov.profileapp;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,7 +11,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 
 public class FetchData extends AsyncTask<String, Void, String> {
-
+    
     public interface AsyncResponse {
         void processFinish(String output);
     }
@@ -30,7 +31,7 @@ public class FetchData extends AsyncTask<String, Void, String> {
 
             String data = URLEncoder.encode("login", "UTF-8") + "=" + URLEncoder.encode(login, "UTF-8");
             data += "&" + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(password, "UTF-8");
-
+            
             URL url = new URL(urlLink);
             URLConnection connection = url.openConnection();
             connection.setDoOutput(true);

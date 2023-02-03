@@ -1,47 +1,78 @@
 package ru.kopylov.profileapp;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, FetchData.AsyncResponse {
+public class MainActivity extends AppCompatActivity {
 
-    private EditText loginInput;
-    private EditText passwordInput;
-    private Button submitButton;
-    private String login;
-    private String password;
-    private String url;
+    private TextView profile;
+    private SharedPreferences preferences;
+    public static String PREF = "PROFILEAPP_PREFERENCES_FILE";
+    public final static String USER_FULL_NAME = "userfullname";
+    private int code = 0;
+    private Toast toast;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        loginInput = findViewById(R.id.login_input);
-        passwordInput = findViewById(R.id.password_input);
-        submitButton = findViewById(R.id.submit_button);
+        profile = findViewById(R.id.profile_text);
 
-        submitButton.setOnClickListener(this);
+        String userFullName;
+        if ((userFullName = loadUserFullNameFromPref()) == null) {
+            getUserFullName();
+        } else {
+            profile.setText("Hello " + userFullName);
+        }
+    }
+
+    private String loadUserFullNameFromPref() {
+        preferences = getApplicationContext().getSharedPreferences(PREF, MODE_PRIVATE);
+        String userFullName = preferences.getString(USER_FULL_NAME, "");
+        if (userFullName.isEmpty()) {
+            return null;
+        }
+
+        return userFullName;
+    }
+
+    private void getUserFullName() {
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivityForResult(intent, code);
     }
 
     @Override
-    public void onClick(View view) {
-        login = loginInput.getText().toString();
-        password = loginInput.getText().toString();
-        url = "http://profilejava.loc/getUserProfile.php";
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        new FetchData(this).execute(login, password, url);
+        if (requestCode == code) {
+            if (resultCode == RESULT_OK) {
+                String userFullName = data.getStringExtra(USER_FULL_NAME);
+                saveUserFullName(userFullName);
+                profile.setText("Hello " + userFullName);
+            } else {
+                if (toast != null) {
+                    toast.cancel();
+                }
+
+                toast = Toast.makeText(this, "This user not found", Toast.LENGTH_SHORT);
+                toast.show();
+                getUserFullName();
+            }
+        }
     }
 
-    @Override
-    public void processFinish(String output) {
-        Intent intent = new Intent(this, ViewActivity.class);
-        intent.putExtra("full_name", output);
-        startActivity(intent);
+    private void saveUserFullName(String userFullName) {
+        preferences = getApplicationContext().getSharedPreferences(PREF, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(USER_FULL_NAME, userFullName);
+        editor.commit();
     }
 }
