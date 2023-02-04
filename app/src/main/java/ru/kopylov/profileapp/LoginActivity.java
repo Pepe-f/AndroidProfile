@@ -39,7 +39,7 @@ public class LoginActivity extends Activity implements View.OnClickListener, Fet
 
     @Override
     public void processFinish(String output) {
-        if (output.equals("User not found")) {
+        if (!output.equals("User not found")) {
             Intent intent = new Intent();
             intent.putExtra(MainActivity.USER_FULL_NAME, output);
             setResult(RESULT_OK, intent);
